@@ -47,13 +47,14 @@
 
 #heartbeat-feed-form label {
     font-size:1rem;
+    font-weight: 700;
     color: white;
     position:absolute;
-    top:50%;;
-    left:50%;
+    /*top:50%;;*/
+    /*left:50%;*/
     display:inline-block;
     width:auto;
-    transform:translate(-50%, -50%);
+    /*transform:translate(-50%, -50%);*/
 }
 
 #heartbeat-feed-form .form-item-feedtabs {
