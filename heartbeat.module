@@ -274,3 +274,8 @@ function heartbeat_ajax_render_alter(array &$data) {
 //TODO Add heartbeat language to Javascript
 //TODO Determine necessity of polling
 //Add
+
+//TODO implement polling in JS using Drupal Settings
+//$variables['#attached']['drupalSettings']['heartbeatData'] = $mydata;
+//^ will become available in JS as:
+//settings.heartbeatData, data

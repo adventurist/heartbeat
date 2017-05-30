@@ -79,6 +79,11 @@ class HeartbeatStreamServices {
   }
 
 
+  public function loadStream($type) {
+    return $this->entityQuery->get('heartbeat_stream')->condition('name', $type)->execute();
+  }
+
+
   /*
    * Load all available HeartbeatStream entities
    */
@@ -87,7 +92,14 @@ class HeartbeatStreamServices {
   }
 
   public function createStreamForUids($uids) {
-    return $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('uid', $uids, 'IN')->sort('created', 'DESC')->execute());
+    return $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('status', 1)->condition('uid', $uids, 'IN')->sort('created', 'DESC')->execute());
+  }
+
+
+  public function createStreamForUidsByType($uids, $type) {
+    $stream = $this->entityTypeManager->getStorage('heartbeat_stream')->load(array_values($this->loadStream($type))[0]);
+
+    return $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('status', 1)->condition('type', array_column($stream->getTypes(), 'target_id'), 'IN')->condition('uid', $uids, 'IN')->sort('created', 'DESC')->execute());
   }
 
 }
