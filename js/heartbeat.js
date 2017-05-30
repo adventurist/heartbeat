@@ -25,6 +25,14 @@
               });
               // #block-heartbeatblock
             }
+
+            Drupal.AjaxCommands.prototype.updateFeed = function(ajax, response, status) {
+              feed = response.feed;
+              timestamp = response.timestamp;
+
+            }
+
+
         }
     }
 })(jQuery, Drupal, drupalSettings);

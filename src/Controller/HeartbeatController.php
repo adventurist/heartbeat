@@ -170,4 +170,9 @@ class HeartbeatController extends ControllerBase implements ContainerInjectionIn
     return \Drupal\block\BlockViewBuilder::lazyBuilder('heartbeatblock', 'teaser');
   }
 
+
+  public function updateFeed($arg) {
+
+  }
+
 }
