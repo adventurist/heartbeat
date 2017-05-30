@@ -54,7 +54,7 @@
     /*left:50%;*/
     display:inline-block;
     width:auto;
-    /*transform:translate(-50%, -50%);*/
+    transform:translate(5%, -150%);
 }
 
 #heartbeat-feed-form .form-item-feedtabs {
