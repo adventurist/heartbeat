@@ -246,6 +246,7 @@ function heartbeat_handle_entity($entity, $tokenService, $heartbeatTypeService, 
       }
     }
   }
+  \Drupal::service('config.factory')->getEditable('heartbeat_update_feed.settings')->set('update', true)->save();
 }
 
 

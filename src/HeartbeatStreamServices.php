@@ -5,6 +5,7 @@ namespace Drupal\heartbeat;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeRepository;
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * Class HeartbeatStreamServices.
@@ -41,15 +42,23 @@ class HeartbeatStreamServices {
 
 
   /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Constructor.
    * @param EntityTypeManager $entityTypeManager
    * @param EntityTypeRepository $entityTypeRepository
    * @param QueryFactory $entityQuery
    */
-  public function __construct(EntityTypeManager $entityTypeManager, EntityTypeRepository $entityTypeRepository, QueryFactory $entityQuery) {
+  public function __construct(EntityTypeManager $entityTypeManager, EntityTypeRepository $entityTypeRepository, QueryFactory $entityQuery, ConfigFactoryInterface $configFactory) {
     $this->entityTypeManager = $entityTypeManager;
     $this->entityTypeRepository = $entityTypeRepository;
     $this->entityQuery = $entityQuery;
+    $this->configFactory = $configFactory;
   }
 
   /**
@@ -107,6 +116,8 @@ class HeartbeatStreamServices {
     $beats = $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('status', 1)->condition('type', array_column($stream->getTypes(), 'target_id'), 'IN')->condition('uid', $uids, 'IN')->sort('created', 'DESC')->execute());
 
     $this->lastId = call_user_func('end', array_keys($beats));
+
+    $this->configFactory->getEditable('heartbeat_update_feed')->set('timestamp', $this->lastId)->set('update', false)->save();
 
     $this->latestTimestamp = array_values($beats)[0]->getRevisionCreationTime();
 
