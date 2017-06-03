@@ -466,9 +466,14 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
   }
 
   private static function mediaTag($type, $filePath) {
-    //TODO put this into new method
-    if ($type == 'image') { $type = 'img';}
-    return '<'. $type . ' src="' . str_replace('public://', '/sites/default/files/', $filePath) . '" / >';
+
+    if ($type === 'image') {
+      $type = 'img';
+      return '<' . $type . ' src="' . str_replace('public://', '/sites/default/files/', $filePath) . '" / >';
+    } else if ($type === 'youtube') {
+      $filePath = str_replace('http://www.youtube.com/embed/', 'youtube://', $filePath);
+      return '<iframe width="560" height="315" src="' . $filePath . '" frameborder="0"></iframe>';
+    }
   }
 
   protected static function handleMultipleEntities(Token $tokenService, $message, $entities) {
