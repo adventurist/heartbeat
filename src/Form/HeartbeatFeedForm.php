@@ -88,7 +88,6 @@ class HeartbeatFeedForm extends FormBase {
               $this->streams[$heartbeatStream->getName()] = t($heartbeatStream->getName());
           }
       }
-
     $form['feedtabs'] = [
       '#type' => 'radios',
       '#title' => $this->t('Choose a feed'),
@@ -101,6 +100,7 @@ class HeartbeatFeedForm extends FormBase {
         'type' => 'none',
 //        'message' => t('Fetching feed'),
         ),
+        '#default' => $this->streams['Public'],
       ]
     ];
 
@@ -147,8 +147,6 @@ class HeartbeatFeedForm extends FormBase {
     // Display result.
     $stophere = null;
     $stopthere = null;
-
-    \Drupal::logger('HeartbeatFeedForm::submitForm')->debug('Jigga what is %arg', ['%arg' => $arg]);
 
     foreach ($form_state->getValues() as $key => $value) {
         drupal_set_message($key . ': ' . $value);
