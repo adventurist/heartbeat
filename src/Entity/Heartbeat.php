@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Database\Database;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -346,6 +347,48 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
       ))
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['comments'] = BaseFieldDefinition::create('comment')
+      ->setLabel(t('Kommentare'))
+      ->setDescription(t('Kommentare.'))
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setSettings(
+        array(
+          'default_mode'=> 1,
+          'per_page'=>50,
+          'anonymous'=> 0,
+          'form_location'=>1,
+          'preview'=> 1,
+          'comment_type'=>'heartbeat_comment',
+          'locked'=>false,
+
+        ))
+      ->setDefaultValue(
+        array(
+          'status'=>2,
+          'cid'=>0,
+          'last_comment_timestamp'=> 0,
+          'last_comment_name'=> null,
+          'last_comment_uid'=> 0,
+          'comment_count'=> 0,
+        )
+      )
+      ->setDisplayOptions('form', array(
+        'type' => 'comment_default',
+        'settings' => array(
+          'form_location' => 1,
+          'default_mode'=> 1,
+          'per_page'=>50,
+          'anonymous'=> 0,
+          'preview'=> 1,
+          'comment_type'=>'heartbeat_comment',
+          'locked'=>false,
+
+        ),
+        'weight' => 1,
+      ))
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
 
     $fields['status'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Publishing status'))
@@ -430,12 +473,15 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
     $arbitrarious = 'nothing at all';
     $naul = 'nullll';
 
+    $preparsedMessage = self::wrapOwner($preparsedMessage, $entities);
 
     switch (true) {
 
       case $entityType === 'node':
 
-        $parsedMessage = $tokenService->replace($preparsedMessage . '<a class="heartbeat-node" href="/node/[node:nid]">', $entities);
+//        $parsedMessage = $tokenService->replace($preparsedMessage . '<a class="heartbeat-node" href="/node/[node:nid]">', $entities);
+        $parsedMessage = $tokenService->replace($preparsedMessage, $entities);
+
         if (strpos($parsedMessage, '#')) {
           self::parseHashtags($parsedMessage);
         }
@@ -445,7 +491,7 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
         /** @noinspection NestedTernaryOperatorInspection */
         $message = $parsedMessage;
         $message .= $mediaData ? self::buildMediaMarkup($mediaData) : '';
-        $message .= '</a>';
+//        $message .= '</a>';
 
         return $message;
         break;
@@ -772,6 +818,16 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
     return $names;
   }
 
+  private static function wrapOwner($message, $entities) {
+    foreach ($entities as $entity) {
+      if ($entity instanceof User) {
+        return str_replace(
+          '[user:account-name]',
+          '<a class="heartbeat-user" href="user/' . $entity->id() . '">[user:account-name]</a>', $message);
+      }
+    }
+    return $message;
+  }
 
   /**
    * Updates the friendship status of these two users
