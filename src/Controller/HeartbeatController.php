@@ -168,7 +168,7 @@ class HeartbeatController extends ControllerBase implements ContainerInjectionIn
     $myConfig->set('message', $arg)->save();
     \Drupal::logger('HeartbeatController')->debug('My argument is %arg', ['%arg' => $arg]);
 
-    return BlockViewBuilder::lazyBuilder('heartbeatblock', 'teaser');
+    return BlockViewBuilder::lazyBuilder('heartbeatblock', 'full');
   }
 
 
@@ -182,6 +182,13 @@ class HeartbeatController extends ControllerBase implements ContainerInjectionIn
 
     return BlockViewBuilder::lazyBuilder('heartbeathashblock', 'teaser');
 
+  }
+
+  public function commentConfigUpdate($entity_id) {
+    $commentConfig = \Drupal::configFactory()->getEditable('heartbeat_comment.settings');
+    $commentConfig->set('entity_id', $entity_id)->save();
+
+    return true;
   }
 
 }
