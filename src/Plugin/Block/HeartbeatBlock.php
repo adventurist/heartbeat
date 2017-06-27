@@ -198,18 +198,24 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $cids = \Drupal::entityQuery('comment')
         ->condition('entity_id', $heartbeat->id())
         ->condition('entity_type', 'heartbeat')
-        ->sort('cid', 'DESC')
+        ->sort('cid', 'ASC')
         ->execute();
 
       $comments = [];
 
       foreach($cids as $cid) {
 
-//        $comment = $this->entityTypeManager->getStorage('comment')->load($cid);
-          $comment = Comment::load($cid);
-//        $comment->delete();
+        $comment = Comment::load($cid);
 
-        $comments[] = $comment->get('comment_body')->value;
+        $commentOwner = user_view($comment->getOwner(), 'comment');
+        $comments[] = [
+          'id' => $cid,
+          'body' => $comment->get('comment_body')->value,
+          'username' => $comment->getAuthorName(),
+          'owner' => $commentOwner,
+          'timeAgo' => $this->dateFormatter->formatInterval(REQUEST_TIME - $comment->getCreatedTime())
+        ];
+
       }
 
 //      $heartbeatCommentBlock = \Drupal\block\Entity\Block::load('heartbeatcommentblock');
@@ -219,9 +225,21 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $form = \Drupal::service('form_builder')->getForm('\Drupal\heartbeat\Form\HeartbeatCommentForm', $heartbeat);
 
       $likeFlag = $this->flagService->getFlagById('heartbeat_like');
+      $unlikeFlag = $this->flagService->getFlagById('jihad_flag');
 
-      $flagKey = 'flag_' . $likeFlag->id();
-      $flagData = [
+
+      $unlikeKey = 'flag_' . $unlikeFlag->id();
+      $unlikeData = [
+        '#lazy_builder' => ['flag.link_builder:build', [
+          $heartbeat->getEntityTypeId(),
+          $heartbeat->id(),
+          $unlikeFlag->id(),
+        ]],
+        '#create_placeholder' => TRUE,
+      ];
+
+      $likeKey = 'flag_' . $likeFlag->id();
+      $likeData = [
         '#lazy_builder' => ['flag.link_builder:build', [
           $heartbeat->getEntityTypeId(),
           $heartbeat->id(),
@@ -238,7 +256,8 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
         'user' => $userView,
         'commentForm' => $form,
         'comments' => $comments,
-        'likeFlag' => [$flagKey => $flagData],
+        'likeFlag' => [$likeKey => $likeData],
+        'unlikeFlag' => [$unlikeKey => $unlikeData]
         );
     }
 }

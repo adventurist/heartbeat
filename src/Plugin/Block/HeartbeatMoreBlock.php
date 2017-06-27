@@ -23,11 +23,11 @@ use Drupal\heartbeat\HeartbeatService;
  * Provides a 'HeartbeatBlock' block.
  *
  * @Block(
- *  id = "heartbeat_hash_block",
- *  admin_label = @Translation("Heartbeat Hash block"),
+ *  id = "heartbeat_more_block",
+ *  admin_label = @Translation("Heartbeat More block"),
  * )
  */
-class HeartbeatHashBlock extends BlockBase implements ContainerFactoryPluginInterface {
+class HeartbeatMoreBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
    * Drupal\heartbeat\HeartbeatTypeServices definition.
@@ -106,17 +106,18 @@ class HeartbeatHashBlock extends BlockBase implements ContainerFactoryPluginInte
    */
   public function build() {
 
-    $myConfig = \Drupal::service('config.factory')->getEditable('heartbeat_feed.settings');
-    $tagConfig = \Drupal::config('heartbeat_hashtag.settings');
-    $tid = $tagConfig->get('tid');
+    $feedConfig = \Drupal::config('heartbeat_feed.settings');
+    $myConfig = \Drupal::config('heartbeat_more.settings');
     $friendData = \Drupal::config('heartbeat_friendship.settings')->get('data');
 
-    $feed = $myConfig->get('message');
+    $hid = $myConfig->get('hid');
+    $feed = $feedConfig->get('message');
+
     $uids = null;
     $messages = array();
 
     $query = Database::getConnection()->select('heartbeat_friendship', 'hf')
-      ->fields('hf',['uid', 'uid_target']);
+      ->fields('hf', ['uid', 'uid_target']);
     $conditionOr = $query->orConditionGroup()
       ->condition('hf.uid', \Drupal::currentUser()->id())
       ->condition('hf.uid_target', \Drupal::currentUser()->id());
@@ -129,39 +130,33 @@ class HeartbeatHashBlock extends BlockBase implements ContainerFactoryPluginInte
         $uids[] = $uid->uid;
       }
     }
-      if ($feed !== null) {
+    if ($feed !== null) {
       $uids = count($uids) > 1 ? array_unique($uids) : $uids;
-        if (!empty($uids)) {
-          foreach ($this->heartbeatStreamServices->createHashStreamForUidsByType($uids, $feed, $tid) as $heartbeat) {
-            $this->renderMessage($messages, $heartbeat);
-          }
-        } else {
-          foreach ($this->heartbeatStreamServices->createStreamByType($feed) as $heartbeat) {
-            $this->renderMessage($messages, $heartbeat);
-          }
-        }
-      } else {
-//        foreach ($this->heartbeatStreamServices->createStreamForUids($uids) as $heartbeat) {
-        foreach ($this->heartbeatStreamServices->loadAllStreams() as $heartbeat) {
-          \Drupal::logger('HeartbeatHashBlock')->error('Could not load Heartbeats for Hashtag');
+      if (!empty($uids)) {
+        foreach ($this->heartbeatStreamServices->getOlderStreamForUidsByType($uids, $feed, $hid) as $heartbeat) {
           $this->renderMessage($messages, $heartbeat);
         }
       }
-
-      return [
-        '#theme' => 'heartbeat_stream',
-        '#messages' => $messages,
-        '#attached' => array(
-          'library' => 'heartbeat/heartbeat',
-          'drupalSettings' => [
-            'activeFeed' => 'jigga',
-            'friendData' => $friendData,
-          ]
-        ),
-        '#cache' => array('max-age' => 0)
-      ];
-
+      if (count($messages) > 0) {
+        return [
+          '#theme' => 'heartbeat_stream',
+          '#messages' => $messages,
+          '#attached' => array(
+            'library' => 'heartbeat/heartbeat',
+            'drupalSettings' => [
+              'activeFeed' => 'jigga',
+              'friendData' => $friendData,
+            ]
+          ),
+          '#cache' => array('max-age' => 0)
+        ];
+      }
     }
+    return [
+      '#type' => 'markup',
+      '#markup' => 'End of feed',
+    ];
+  }
 
   private function renderMessage(array &$messages, $heartbeat) {
 
