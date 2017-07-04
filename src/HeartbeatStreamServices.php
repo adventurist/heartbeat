@@ -130,7 +130,7 @@ class HeartbeatStreamServices {
   }
 
   public function createStreamForUids($uids) {
-    return $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('status', 1)->condition('uid', $uids, 'IN')->sort('created', 'DESC')->range(0,50)->range(0,50)->execute());
+    return $this->entityTypeManager->getStorage('heartbeat')->loadMultiple($this->entityQuery->get('heartbeat')->condition('status', 1)->condition('uid', $uids, 'IN')->sort('created', 'DESC')->range(0,50)->execute());
   }
 
   public function createStreamByType($type) {
