@@ -29,18 +29,17 @@ class HeartbeatSubCommentForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['comment_body'] = array(
       '#type' => 'textarea',
-      '#title' => $this->t('Comment Body'),
     );
 
     $form['post'] = array(
       '#type' => 'submit',
       '#description' => 'Comment',
-      '#value' => t('Comment'),
+      '#value' => t('Reply'),
       '#ajax' => [
         'callback' => '::commentAjaxSubmit',
         'progress' => array(
           'type' => 'throbber',
-          'message' => t('Posting Comment'),
+          'message' => t('Posting Reply'),
         ),
       ]
     );
@@ -70,9 +69,8 @@ class HeartbeatSubCommentForm extends FormBase {
       ]);
 
       if ($comment->save()) {
-$userview= user_view($comment->getOwner(), 'comment');
-$cid = $comment->id();
-$body = $commentBody;
+        $userview= user_view($comment->getOwner(), 'comment');
+
         $response = new AjaxResponse();
         $response->addCommand(new AppendCommand(
           '#heartbeat-comment-' . $config->get('cid') . ' .sub-comment',
