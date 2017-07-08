@@ -130,7 +130,7 @@ function heartbeat_entity_insert(EntityInterface $entity) {
                 'type' => $heartbeatTypeEntity->id(),
                 'uid' => $user->id(),
                 'nid' => $entity->id(),
-                'name' => 'Dev Test',
+                'name' => $entity->getTitle(),
               ]);
               //TODO Find better fix than this str_replace
               $heartbeatActivity->setMessage(str_replace('&039;', "'", $heartbeatMessage));
