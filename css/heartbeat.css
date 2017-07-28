@@ -10,6 +10,7 @@
 
 .heartbeat-message img {
   display: block;
+  padding: 4px;
 }
 
 
@@ -27,6 +28,7 @@
 .cboxPhoto {
   max-height: 854px;
   width: auto!important;
+  height: auto!important;
   position: absolute;
   top:0;
   bottom: 0;
@@ -53,37 +55,41 @@
 }
 
 #cboxNext {
-  display: inline-block;
-  transform: translate(821%, 550%);
+  position: absolute;
+  right: 5px;
+  top: 45%;
   color: transparent;
-  background-image: url(/themes/kekistan/images/icons/forward.png);
-  background-repeat: no-repeat;
-  background-position: 10px 20px;
-  width: 45px;
-  height: 75px;
+  background: rgba(45, 45, 45, 0.5) url(/themes/kekistan/images/icons/forward.png) no-repeat 10px 10px;
+  background-size: 30px;
+  width: 10px;
+  height: 50px;
 }
 
 #cboxPrevious {
-  display: inline-block;
-  transform: translate(-800%, 550%);
+  position: absolute;
+  left: 5px;
+  top: 45%;
   color: transparent;
-  background-image: url(/themes/kekistan/images/icons/backward.png);
-  background-repeat: no-repeat;
-  background-position: 10px 21px;
-  width: 45px;
-  height: 75px;
+  background: rgba(45, 45, 45, 0.5) url(/themes/kekistan/images/icons/backward.png) no-repeat 10px 10px;
+  background-size: 30px;
+  width: 10px;
+  height: 50px;
 }
 
 #cboxClose {
   position: absolute;
-  top: 95px;
-  right: 100px;
+  top: 5%;
+  right: 1%;
+  width: 56px;
+  height: 56px;
   color: transparent;
-  background-image: url(/themes/kekistan/images/icons/close.png);
-  background-repeat: no-repeat;
-  background-size: 75%;
-  background-position: 6px 2px;
-  width: 45px;
+  border-radius: 20px;
+  background-size: contain;
+  background: rgba(45, 45, 45, 0.5) url(/themes/kekistan/images/icons/close.png) no-repeat center center;
+}
+
+#cboxPrev:hover, #cboxNext:hover, #cboxClose:hover {
+  opacity: 0.5;
 }
 
 /*Main Feed Form*/
@@ -150,9 +156,16 @@ Temporarily hiding all irrelevant content */
 #block-heartbeatblock #block-kekistan-breadcrumbs,
 #block-heartbeatblock #block-kekistan-page-title { display: none}
 
-.heartbeat-stream #content {
-  margin-left: 0;
+/*.heartbeat-stream #content {*/
+  /*margin-left: 0;*/
+/*}*/
+
+#block-heartbeatblock #content {
+  margin-left: 0!important;
+  width: 100%!important;
 }
+
+
 
 /*heartbeat-stream section.section {*/
   /*padding: 0;*/

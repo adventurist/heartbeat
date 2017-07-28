@@ -31,11 +31,15 @@
                 type:'POST',
                 url:'/heartbeat/render_feed/' + response.feed,
                 success: function(response) {
+
                   feedElement = document.querySelector('.heartbeat-stream');
 
                   if (feedElement != null) {
+
                     feedElement.innerHTML = response;
+
                   } else {
+
                     feedBlock = document.getElementById('block-heartbeatblock');
                     insertNode = document.createElement('div');
                     insertNode.innerHTML = response;
@@ -75,17 +79,7 @@
                 }
               });
             }
-          };
-
-          let stream = document.querySelector('.heartbeat-stream');
-
-          let observer = new MutationObserver(function(mutations) {
-            listenImages();
-          });
-
-          let config = { attributes: true, childList: true, characterData: true };
-
-          observer.observe(stream, config);
+          }
         }
     };
 
@@ -102,14 +96,14 @@
 
   function listenImages() {
     let cboxOptions = {
+      width: '95%',
+      height: '95%',
       maxWidth: '960px',
       maxHeight: '960px',
     };
 
     $('.heartbeat-content').find('img').each(function() {
-      let parentClass = $(this).parent().prop('className');
-      let phid = parentClass.substring(parentClass.indexOf('hid') + 4);
-      $(this).colorbox({rel: phid, href: $(this).attr('src'), cboxOptions});
+      $(this).colorbox({href: $(this).attr('src'), cboxOptions});
     });
   }
 
@@ -171,7 +165,7 @@
 
   document.addEventListener("scroll", function (event) {
 
-    if (drupalSettings.filterMode == false && (getScrollXY()[1] + window.innerHeight) / getDocHeight() > 0.99) {
+    if (getDocHeight() == getScrollXY()[1] + window.innerHeight) {
 
       let streams = document.querySelectorAll('.heartbeat-stream');
       let stream = streams.length > 1 ? streams[streams.length - 1] : streams[0];
@@ -183,66 +177,22 @@
         if (lastHeartbeat !== null) {
 
           let hid = lastHeartbeat.id.substring(lastHeartbeat.id.indexOf('-') + 1);
-          if (drupalSettings.lastHid !== hid) {
+          $.ajax({
+            type: 'POST',
+            url: '/heartbeat/update_feed/' + hid,
+            success: function (response) {
 
-            drupalSettings.lastHid = hid;
-
-            $.ajax({
-              type: 'POST',
-              url: '/heartbeat/update_feed/' + hid,
-              success: function (response) {
-
-                feedBlock = document.getElementById('block-heartbeatblock');
-                insertNode = document.createElement('div');
-                insertNode.innerHTML = response;
-                feedBlock.appendChild(insertNode);
-              }
-            });
-          }
+              feedBlock = document.getElementById('block-heartbeatblock');
+              insertNode = document.createElement('div');
+              insertNode.innerHTML = response;
+              feedBlock.appendChild(insertNode);
+            }
+          });
         }
       }
     }
   });
 
-  $(document).on('cbox_open', function() {
-    $("#colorbox").swipe( {
-      //Generic swipe handler for all directions
-      swipeLeft:function(event, direction, distance, duration, fingerCount) {
-        $.colorbox.prev();
-      },
-      swipeRight:function(event, direction, distance, duration, fingerCount) {
-        $.colorbox.next();
-      },
-      //Default is 75px, set to 0 for demo so any distance triggers swipe
-      threshold:25
-    });
-    let cboxCloseBtn = $('#cboxClose');
-    cboxCloseBtn.on('click touchstart', function() {
-      $.colorbox.close();
-    });
-    cboxCloseBtn.on('keyup', function(e) {
-      if (e.keyCode == 27) {
-        $.colorbox().close();
-      }
-    });
-
-    // let cboxClose = document.getElementById('cboxClose');
-    // cboxClose.addEventListener('click', function() {
-    //   $.colorbox.close();
-    // });
-    // cboxClose.addEventListener('touchstart', function() {
-    //   $.colorbox.close();
-    // });
-    // document.addEventListener('keyup', function(e) {
-    //   if (e.keyCode == 27) {
-    //     $.colorbox.close();
-    //   }
-    // })
-
-    return true;
-
-    }
-  );
 
 })(jQuery, Drupal, drupalSettings);
 

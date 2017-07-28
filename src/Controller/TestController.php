@@ -62,27 +62,6 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
     );
   }
 
-  /**
-   * Start.
-   *
-   * @return string
-   * @throws \InvalidArgumentException
-   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
-   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
-   * @throws \Drupal\Core\Database\InvalidQueryException
-   *   Return Hello string.
-   */
-  public function start($arg) {
-
-    $statusTwitter = new StatusTwitter('https://twitter.com/lvd_drm/status/874429014684745728');
-    $nid = $statusTwitter->sendRequest();
-
-    return [
-      '#type' => 'markup',
-      '#markup' => $this->t('Implement method: start with parameter(s): ' . $arg),
-    ];
-  }
-
   public function saveHeartbeats() {
     $heartbeats = $this->entityQuery->get("heartbeat")->execute();
     $data = array();
@@ -98,6 +77,32 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
     return [
       '#type' => 'markup',
       '#markup' => $this->t($result),
+    ];
+
+
+  }
+
+
+  /**
+   * Start.
+   *
+   * @return string
+   * @throws \InvalidArgumentException
+   * @throws \Drupal\Core\Database\IntegrityConstraintViolationException
+   * @throws \Drupal\Core\Database\DatabaseExceptionWrapper
+   * @throws \Drupal\Core\Database\InvalidQueryException
+   *   Return Hello string.
+   */
+  public function start($arg) {
+
+    $stuff = '{"USERS": [{"1": {"email": "wortle@wortletjes.com", "name": "Dutchman", "id": 1, "status": 1, "created": 1500268689}}]}';
+
+    $decoded = \json_decode($stuff);
+
+
+    return [
+      '#type' => 'markup',
+      '#markup' => $this->t('jizzla'),
     ];
 
 
@@ -135,7 +140,7 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
     ];
 
   }
-
+//
   public function deleteHeartbeats() {
     $entities = \Drupal::service("entity.query")->get("heartbeat")->execute();
     foreach($entities as $entity) {
