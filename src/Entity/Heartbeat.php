@@ -11,6 +11,7 @@ use Drupal\Core\Utility\Token;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
 use Drupal\Core\Database\Database;
+use Drupal\flag\FlagService;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
@@ -319,7 +320,7 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
       ->setDescription(t('The name of the Heartbeat entity.'))
       ->setRevisionable(TRUE)
       ->setSettings(array(
-        'max_length' => 50,
+        'max_length' => 128,
         'text_processing' => 0,
       ))
       ->setDefaultValue('')
@@ -825,6 +826,19 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
       }
     }
     return $message;
+  }
+
+
+  public static function flagAjaxMarkup($flagId, $entity, FlagService $flagService) {
+    $flag = $flagService->getFlagById($flagId);
+    $link = $flag->getLinkTypePlugin()->getAsLink($flag, $entity);
+    $options = $link->getUrl()->getOptions();
+    $options['query']['destination'] = 'node';
+    $link->getUrl()->setOptions($options);
+    $action = $flag->getLinkTypePlugin()->getAsFlagLink($flag, $entity)['#action'];
+    $url = $link->getUrl()->toString();
+
+    return '<div class="flag flag-' . $flagId . '  flag-' . $flagId . '-' . $entity->id() . ' action-' . $action. '"><a href="' . $url . '" class="use-ajax" rel="nofollow"></a></div>';
   }
 
   /**

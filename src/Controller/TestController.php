@@ -94,8 +94,9 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
    *   Return Hello string.
    */
   public function start($arg) {
+$jigga = 'what';
 
-    $stuff = '{"USERS": [{"1": {"email": "wortle@wortletjes.com", "name": "Dutchman", "id": 1, "status": 1, "created": 1500268689}}]}';
+    $stuff = file_get_contents('http://cointrx.com:6969/prices/latest');
 
     $decoded = \json_decode($stuff);
 
@@ -117,18 +118,36 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
       $heartbeats = array_reverse($heartbeats);
       foreach ($heartbeats as $heartbeat) {
 
-        $message = $heartbeat->getMessage();
-        $heartbeatActivity = Heartbeat::create([
-          'type' => $heartbeat->id(),
-          'uid' => $heartbeat->getOwnerId(),
-          'nid' => $heartbeat->getNid()->getValue()[0]['target_id'],
-          'name' => 'Dev Test',
-          'type' => $heartbeat->getType(),
-          'message' => $heartbeat->getMessage()->getValue()[0]['value']
-        ]);
+        if ($heartbeat instanceof \Drupal\heartbeat\Entity\Heartbeat) {
+//          try {
+//            $heartbeat->save();
+//          } catch (\Exception $e) {
+//            $message = $e->getMessage();
+//          }
+//        }
+          $nid = $heartbeat->get('nid')->getValue()[0]['target_id'];
+          $title = 'Dev Test';
+          $type = $type = $this->heartbeat_heartbeattype->load($heartbeat->get('type')->getValue()[0]['target_id']);
 
-        if (!$heartbeatActivity->save()) {
-          $errors = true;
+          if ($type->get('mainentity') == 'node') {
+            $node = $this->entityTypeManager()->getStorage('node')->load($nid);
+            if ($node !== null) {
+              $title = $node->getTitle();
+            }
+          }
+
+
+          $heartbeatActivity = Heartbeat::create([
+            'uid' => $heartbeat->getOwnerId(),
+            'nid' => $heartbeat->getNid()->getValue()[0]['target_id'],
+            'name' => $title,
+            'type' => $heartbeat->getType(),
+            'message' => $heartbeat->getMessage()->getValue()[0]['value']
+          ]);
+
+          if (!$heartbeatActivity->save()) {
+            $errors = true;
+          }
         }
       }
     }
@@ -147,6 +166,11 @@ public function __construct(HeartbeatTypeServices $heartbeat_heartbeattype, Hear
       $heartbeat = \Drupal::service("entity_type.manager")->getStorage("heartbeat")->load($entity);
       $heartbeat->delete();
     }
+
+    return [
+      '#type' => 'markup',
+      '#markup' => $this->t('Deleting them Heartbeats')
+    ];
   }
 
 }
