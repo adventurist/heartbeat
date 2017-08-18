@@ -127,7 +127,6 @@
   }
 
   function getParent(node) {
-    console.dir(node);
     if (node != null && node != undefined && node.classList != undefined && node.classList.contains('heartbeat-comment')) {
       let id = node.id.substr(node.id.indexOf('-') + 1);
       $.ajax({

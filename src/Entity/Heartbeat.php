@@ -500,6 +500,14 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
       case $entityType === 'status':
 
         $parsedMessage = $tokenService->replace($preparsedMessage . '<a class="status-post" href="/admin/structure/' . $entityType . '/[' . $entityType . ':id]">', $entities);
+
+        if (strpos($parsedMessage, '#')) {
+          self::parseHashtags($parsedMessage);
+        }
+        if (strpos($parsedMessage, '@')) {
+          self::parseUsernames($parsedMessage);
+        }
+
         /** @noinspection NestedTernaryOperatorInspection */
         $message = $parsedMessage;
         $message .= $mediaData ? self::buildMediaMarkup($mediaData) : 'Post';
@@ -642,6 +650,10 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
     $message = '';
     foreach ($tagsArray as $replacements) {
       $message .= $replacements;
+
+    }
+    if (!strpos($message, '#') || strpos($message, '#') !== 1) {
+      $message = '#' . $message;
     }
   }
 
