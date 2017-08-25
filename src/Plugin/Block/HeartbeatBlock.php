@@ -141,38 +141,37 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
         $uids[] = $uid->uid;
       }
     }
-      if ($feed !== null && $this->heartbeatStreamServices) {
-      $uids = count($uids) > 1 ? array_unique($uids) : $uids;
-        if (!empty($uids)) {
-          foreach ($this->heartbeatStreamServices->createStreamForUidsByType($uids, $feed) as $heartbeat) {
-            $this->renderMessage($messages, $heartbeat);
-          }
-        } else {
-          foreach ($this->heartbeatStreamServices->createStreamByType($feed) as $heartbeat) {
-            $this->renderMessage($messages, $heartbeat);
-          }
+    if ($feed !== null && $this->heartbeatStreamServices) {
+    $uids = count($uids) > 1 ? array_unique($uids) : $uids;
+      if (!empty($uids)) {
+        foreach ($this->heartbeatStreamServices->createStreamForUidsByType($uids, $feed) as $heartbeat) {
+          $this->renderMessage($messages, $heartbeat);
         }
       } else {
-//        foreach ($this->heartbeatStreamServices->createStreamForUids($uids) as $heartbeat) {
-        foreach ($this->heartbeatStreamServices->loadAllStreams() as $heartbeat) {
+        foreach ($this->heartbeatStreamServices->createStreamByType($feed) as $heartbeat) {
           $this->renderMessage($messages, $heartbeat);
         }
       }
-
-      return [
-        '#theme' => 'heartbeat_stream',
-        '#messages' => $messages,
-        '#attached' => array(
-          'library' => 'heartbeat/heartbeat',
-          'drupalSettings' => [
-            'activeFeed' => 'jigga',
-            'friendData' => $friendData,
-          ]
-        ),
-        '#cache' => array('max-age' => 0)
-      ];
-
+    } else {
+      foreach ($this->heartbeatStreamServices->loadAllStreams() as $heartbeat) {
+        $this->renderMessage($messages, $heartbeat);
+      }
     }
+
+    return [
+      '#theme' => 'heartbeat_stream',
+      '#messages' => $messages,
+      '#attached' => array(
+        'library' => 'heartbeat/heartbeat',
+        'drupalSettings' => [
+          'activeFeed' => 'jigga',
+          'friendData' => $friendData,
+        ]
+      ),
+      '#cache' => array('max-age' => 0)
+    ];
+
+  }
 
     private function renderMessage(array &$messages, $heartbeat) {
       $timeago = null;
@@ -295,7 +294,7 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
       }
 
       $form = \Drupal::service('form_builder')->getForm('\Drupal\heartbeat\Form\HeartbeatCommentForm', $heartbeat);
-
+      $commentCount = count($comments);
       $messages[] = array('heartbeat' => $heartbeat->getMessage()->getValue()[0]['value'],
         'userPicture' => $rendered,
         'userId' => $user->id(),
@@ -304,7 +303,8 @@ class HeartbeatBlock extends BlockBase implements ContainerFactoryPluginInterfac
         'userName' => $user->getAccountName(),
         'user' => $userView,
         'commentForm' => $form,
-        'comments' => $comments,
+        'comments' => array_reverse($comments),
+        'commentCount' => $commentCount > 0 ? $commentCount : '',
         'likeFlag' => Heartbeat::flagAjaxMarkup('heartbeat_like', $heartbeat, $this->flagService),
         'unlikeFlag' => Heartbeat::flagAjaxMarkup('jihad_flag', $heartbeat, $this->flagService)
         );

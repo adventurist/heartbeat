@@ -2,11 +2,11 @@
 
 namespace Drupal\heartbeat\Form;
 
+use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Comment\Entity\Comment;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\AppendCommand;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\statusmessage\MarkupGenerator;
 
@@ -24,14 +24,6 @@ class HeartbeatCommentForm extends FormBase {
     /**
      * {@inheritdoc}
      */
-  public static function create(ContainerInterface $container)
-  {
-    return new static(
-//      $container->get('status_type_service'),
-//      $container->get('statusservice'),
-      $container->get('markupgenerator'));
-  }
-
 
   /**
    * {@inheritdoc}
@@ -51,7 +43,6 @@ class HeartbeatCommentForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['comment_body'] = array(
       '#type' => 'textarea',
-      '#prefix' => '<div class="heartbeat-comment-button">Comment</div>',
       '#title' => $this->t('Comment Body'),
     );
 
@@ -82,9 +73,11 @@ class HeartbeatCommentForm extends FormBase {
 
       if (strlen(trim($commentBody)) > 1) {
         $extraMarkup = null;
-        if (!empty($urls = $this->markupGenerator->validateUrl($commentBody))) {
-          $url = array_values($urls)[0];
-          $url = !is_array($url) ? $url : array_values($url)[0];
+        $sharedUrls = array_values($this->markupGenerator->validateUrl($commentBody))[0];
+
+        if (!empty($sharedUrls)) {
+
+          $url = !is_array($sharedUrls) ? $sharedUrls : array_values($sharedUrls)[0];
           $this->markupGenerator->parseMarkup($url);
           $extraMarkup = '<a href="' . $url . '" class="status-comment-share"> ' . $this->markupGenerator->generatePreview() . '</a>';
         }
@@ -104,7 +97,7 @@ class HeartbeatCommentForm extends FormBase {
           $cid = $comment->id();
           $body = $commentBody;
           $response = new AjaxResponse();
-          $response->addCommand(new AppendCommand(
+          $response->addCommand(new PrependCommand(
               '#heartbeat-' . $config->get('entity_id') . ' .heartbeat-comments',
               '<div id="heartbeat-comment-' . $comment->id() . '"><span class="comment-owner"><span class="comment-username">' . \Drupal::currentUser()->getAccountName() . '</span>' . render($userview) . '<span class"comment-ago">1 sec ago</span></span><span class="comment-body">' . $commentBody . '</span><span class="sub-comment"><a href="/heartbeat/subcommentrequest/' . $cid . '" class="button button-action use-ajax">Reply</a></span></div>')
           );

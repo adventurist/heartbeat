@@ -1,16 +1,71 @@
 /**
  * Created by logicp on 5/28/17.
  */
+
+const commentListen = function(e) {
+
+  let commentBlock = e.srcElement.parentNode.parentNode.querySelector('.heartbeat-comments');
+
+  if (!commentBlock.classList.contains('heartbeat-comments-visible')) {
+    commentBlock.className += ' heartbeat-comments-visible';
+  } else {
+    commentBlock.classList.remove('heartbeat-comments-visible');
+  }
+
+
+  if (drupalSettings.user.uid > 0) {
+
+    let childs = e.srcElement.parentNode.querySelectorAll('.form-submit, .js-form-type-textarea');
+    console.dir(childs);
+    for (let c = 0; c < childs.length; c++) {
+      toggleCommentElements(childs[c]);
+    }
+  } else {
+    // loginModal()
+    $.ajax({
+      type: 'GET',
+      url: '/user/modal/login',
+      success: function (response) {
+        mainContainer = document.getElementById('main');
+        loginBlock = document.createElement('div');
+        loginBlock.innerHTML = response;
+        loginBlock.className = 'kekistan-login-block';
+        loginBlock.id = 'kekistan-login-block';
+        closeBtn = document.createElement('div');
+        closeBtn.className =  'kekistan-login-block-close';
+        closeBtn.innerHTML = '✖';
+        loginBlock.appendChild(closeBtn);
+        mainContainer.appendChild(loginBlock);
+
+        closeBtn.addEventListener('click', function() {
+          loginBlock.innerHTML = '';
+          mainContainer.removeChild(loginBlock);
+        });
+
+      }
+    });
+  }
+};
+
+
 (function($, Drupal, drupalSettings) {
+
+  $(document).ready(function() {
+
+    const loader = document.createElement('div');
+    loader.id = 'heartbeat-loader';
+    const body = document.getElementsByTagName('body')[0];
+    body.appendChild(loader);
+
     Drupal.behaviors.heartbeat = {
         attach: function (context, settings) {
 
           if (drupalSettings.friendData != null) {
-            var divs = document.querySelectorAll('.flag-friendship a.use-ajax');
+            let divs = document.querySelectorAll('.flag-friendship a.use-ajax');
 
             for (let i = 0; i < divs.length; i++) {
               let anchor = divs[i];
-              var userId = anchor.href.substring(anchor.href.indexOf('friendship') + 11, anchor.href.indexOf('?destination'));
+              let userId = anchor.href.substring(anchor.href.indexOf('friendship') + 11, anchor.href.indexOf('?destination'));
               JSON.parse(drupalSettings.friendData).forEach(function (friendship) {
                 if (friendship.uid_target === userId && friendship.uid == drupalSettings.user.uid && friendship.status == 0) {
                   anchor.innerHTML = 'Friendship Pending';
@@ -76,21 +131,26 @@
               });
             }
           };
-
-          let stream = document.querySelector('.heartbeat-stream');
-
-          let observer = new MutationObserver(function(mutations) {
-            listenImages();
-          });
-
-          let config = { attributes: true, childList: true, characterData: true };
-
-          observer.observe(stream, config);
         }
     };
 
+    commentFormListeners();
+    let stream = document.getElementById('block-heartbeatblock');
 
-  function updateFeed() {
+    let observer = new MutationObserver(function(mutations) {
+    console.log('observer observes a change');
+    listenImages();
+    hideCommentForms();
+    commentFormListeners();
+    });
+
+    let config = { attributes: true, childList: true, characterData: true };
+
+    observer.observe(stream, config);
+    console.dir(observer);
+
+
+    function updateFeed() {
 
     $.ajax({
       type: 'POST',
@@ -98,9 +158,9 @@
       success: function (response) {
       }
     })
-  }
+    }
 
-  function listenImages() {
+    function listenImages() {
     let cboxOptions = {
       maxWidth: '960px',
       maxHeight: '960px',
@@ -111,22 +171,20 @@
       let phid = parentClass.substring(parentClass.indexOf('hid') + 4);
       $(this).colorbox({rel: phid, href: $(this).attr('src'), cboxOptions});
     });
-  }
+    }
 
-  function listenCommentPost() {
-    //TODO is drupal data selector enough? I doubt it.
+    function listenCommentPost() {
     let comments = document.querySelectorAll('[data-drupal-selector]');
 
     for (let i = 0; i < comments.length; i++) {
       let comment = comments[i];
-      // console.dir(comment);
       comment.addEventListener('click', function() {
           getParent(comment);
       })
     }
-  }
+    }
 
-  function getParent(node) {
+    function getParent(node) {
     if (node != null && node != undefined && node.classList != undefined && node.classList.contains('heartbeat-comment')) {
       let id = node.id.substr(node.id.indexOf('-') + 1);
       $.ajax({
@@ -140,9 +198,9 @@
         getParent(node.parentNode);
       }
     }
-  }
+    }
 
-  function getScrollXY() {
+    function getScrollXY() {
     var scrOfX = 0, scrOfY = 0;
     if( typeof( window.pageYOffset ) == 'number' ) {
       //Netscape compliant
@@ -158,19 +216,19 @@
       scrOfX = document.documentElement.scrollLeft;
     }
     return [ scrOfX, scrOfY ];
-  }
+    }
 
-//taken from http://james.padolsey.com/javascript/get-document-height-cross-browser/
-  function getDocHeight() {
+    //taken from http://james.padolsey.com/javascript/get-document-height-cross-browser/
+    function getDocHeight() {
     var D = document;
     return Math.max(
       D.body.scrollHeight, D.documentElement.scrollHeight,
       D.body.offsetHeight, D.documentElement.offsetHeight,
       D.body.clientHeight, D.documentElement.clientHeight
     );
-  }
+    }
 
-  document.addEventListener("scroll", function (event) {
+    document.addEventListener("scroll", function (event) {
 
     if (drupalSettings.filterMode == false && (getScrollXY()[1] + window.innerHeight) / getDocHeight() > 0.99) {
 
@@ -188,24 +246,31 @@
 
             drupalSettings.lastHid = hid;
 
+            $('#heartbeat-loader').show(225);
+
             $.ajax({
               type: 'POST',
               url: '/heartbeat/update_feed/' + hid,
+
               success: function (response) {
 
                 feedBlock = document.getElementById('block-heartbeatblock');
                 insertNode = document.createElement('div');
                 insertNode.innerHTML = response;
-                feedBlock.appendChild(insertNode);
+                feedBlock.appendChild(insertNode)
+              },
+
+              complete: function() {
+                $('#heartbeat-loader').hide(225);
               }
             });
           }
         }
       }
     }
-  });
+    });
 
-  $(document).on('cbox_open', function() {
+    $(document).on('cbox_open', function() {
     $("#colorbox").swipe( {
       //Generic swipe handler for all directions
       swipeLeft:function(event, direction, distance, duration, fingerCount) {
@@ -243,7 +308,69 @@
     return true;
 
     }
-  );
+    );
 
+    })
 })(jQuery, Drupal, drupalSettings);
 
+function commentFormListeners() {
+  console.log('Comment Form Listeners');
+  let cFormButtons = document.querySelectorAll('.heartbeat-comment-button');
+
+
+  for (let b = 0; b < cFormButtons.length; b++) {
+    cFormButtons[b].removeEventListener('click', commentListen);
+    cFormButtons[b].addEventListener('click', commentListen);
+  }
+}
+
+
+
+/******** Load Login Block **********
+ ******** append to document ********
+ ******** Hover in middle of screen */
+
+function loginModal() {
+
+  $.ajax({
+    type: 'GET',
+    url: '/user/modal/login',
+    success: function (response) {
+      mainContainer = document.getElementById('main');
+      loginBlock = document.createElement('div');
+      loginBlock.innerHTML = response;
+      loginBlock.className = 'kekistan-login-block';
+      loginBlock.id = 'kekistan-login-block';
+      closeBtn = document.createElement('div');
+      closeBtn.className =  'kekistan-login-block-close';
+      closeBtn.innerHTML = '✖';
+      loginBlock.appendChild(closeBtn);
+      mainContainer.appendChild(loginBlock);
+
+      closeBtn.addEventListener('click', function() {
+        loginBlock.innerHTML = '';
+        mainContainer.removeChild(loginBlock);
+      });
+
+    }
+  });
+}
+
+function hideCommentForms() {
+  let forms = document.querySelectorAll('.heartbeat-comment-form .js-form-type-textarea, .heartbeat-comment-form .form-submit');
+
+  for (let f = 0; f < forms.length; f++) {
+    forms[f].className += ' comment-form-hidden';
+  }
+}
+
+function toggleCommentElements(node) {
+
+  console.dir(node);
+  if (node.classList.contains('comment-form-hidden')) {
+    console.log('removing comment-form-hidden class from element');
+    node.classList.remove('comment-form-hidden');
+  } else {
+    node.className += ' comment-form-hidden';
+  }
+}
