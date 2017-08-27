@@ -329,10 +329,10 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
         'type' => 'string',
         'weight' => -4,
       ))
-      ->setDisplayOptions('form', array(
-        'type' => 'string_textfield',
-        'weight' => -4,
-      ))
+//      ->setDisplayOptions('form', array(
+//        'type' => 'string_textfield',
+//        'weight' => -4,
+//      ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -346,6 +346,7 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
         'type' => 'full_html',
         'weight' => -4,
       ))
+      ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['comments'] = BaseFieldDefinition::create('comment')
@@ -437,8 +438,6 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
    * @return string|false
    *   The heartbeat type label or FALSE if the heartbeat type is not found.
    *
-   * @todo Add this as generic helper method for config entities representing
-   *   entity bundles.
    */
   public function heartbeat_get_type(HeartbeatInterface $heartbeat) {
     $type = HeartbeatType::load($heartbeat->bundle());
@@ -546,7 +545,6 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
   }
 
   private static function mediaTag($type, $filePath) {
-    //TODO put this into new method
     if ($type == 'image') {
       $type = 'img';
       return '<' . $type . ' src="' . str_replace('public://', '/sites/default/files/', $filePath) . '" class="heartbeat-image" / >';
@@ -651,9 +649,6 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
     foreach ($tagsArray as $replacements) {
       $message .= $replacements;
 
-    }
-    if (!strpos($message, '#') || strpos($message, '#') !== 1) {
-      $message = '#' . $message;
     }
   }
 
@@ -848,9 +843,30 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
     $options['query']['destination'] = 'node';
     $link->getUrl()->setOptions($options);
     $action = $flag->getLinkTypePlugin()->getAsFlagLink($flag, $entity)['#action'];
+//    if ($action) {
     $url = $link->getUrl()->toString();
 
-    return '<div class="flag flag-' . $flagId . '  flag-' . $flagId . '-' . $entity->id() . ' action-' . $action. '"><a href="' . $url . '" class="use-ajax" rel="nofollow"></a></div>';
+    return '<div class="flag flag-' . $flagId . '  flag-' . $flagId . '-' . $entity->id() . ' action-' . $action . '"><a href="' . $url . '" class="use-ajax" rel="nofollow"></a></div>';
+//    } else {
+//      return null;
+//    }
+  }
+
+  public static function flagAjaxBuilder($flagId, $entity, FlagService $flagService) {
+
+    $flag = $flagService->getFlagById($flagId);
+
+    $key = 'flag_' . $flag->id();
+    $data = [
+      '#lazy_builder' => ['flag.link_builder:build', [
+        $entity->getEntityTypeId(),
+        $entity->id(),
+        $flag->id(),
+      ]],
+      '#create_placeholder' => TRUE,
+    ];
+
+    return [$key => $data];
   }
 
   /**
@@ -956,9 +972,8 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
    * @return int
    *   The uid of the Heartbeat's user.
    */
-  public function getUid()
-  {
-    // TODO: Implement getUid() method.
+  public function getUid() {
+    return $this->get('uid');
   }
 
   /**
@@ -967,10 +982,11 @@ class Heartbeat extends RevisionableContentEntityBase implements HeartbeatInterf
    * @param int uid
    *   The Heartbeat user.
    *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function setUid($uid)
   {
-    // TODO: Implement setUid() method.
+    $this->set('uid', $uid)->save();
   }
 
   /**
